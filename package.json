@@ -8,5 +8,9 @@
     "dev": "npm --prefix frontend run dev",
     "backend": "npm --prefix backend run dev",
     "frontend": "npm --prefix frontend run dev"
+  },
+  "dependencies": {
+    "formidable": "^3.5.4",
+    "mongoose": "^8.9.5"
   }
 }
