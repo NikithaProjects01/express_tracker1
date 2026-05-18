@@ -1,0 +1,12 @@
+{
+  "name": "image-expense-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run preview -- --host 0.0.0.0",
+    "dev": "npm --prefix frontend run dev",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev"
+  }
+}
