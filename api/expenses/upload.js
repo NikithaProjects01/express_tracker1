@@ -2,7 +2,9 @@ const { formidable } = require("formidable");
 const {
   Expense,
   connectToDatabase,
+  createMemoryExpense,
   extractExpenseWithMistral,
+  hasCloudMongoUri,
   methodNotAllowed,
   sendJson
 } = require("../_utils");
@@ -54,15 +56,20 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 400, { message: "Only JPG, JPEG, PNG, and WEBP image files are allowed" });
     }
 
-    await connectToDatabase();
     const expenseData = await extractExpenseWithMistral(image);
-
-    const expense = await Expense.create({
+    const expensePayload = {
       imageName: image.originalFilename || "uploaded-image",
       imageMimeType: image.mimetype,
       imagePath: `vercel-upload://${image.newFilename || image.originalFilename || Date.now()}`,
       ...expenseData
-    });
+    };
+
+    if (!hasCloudMongoUri()) {
+      return sendJson(res, 201, createMemoryExpense(expensePayload));
+    }
+
+    await connectToDatabase();
+    const expense = await Expense.create(expensePayload);
 
     return sendJson(res, 201, expense);
   } catch (error) {

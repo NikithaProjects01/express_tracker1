@@ -1,18 +1,26 @@
 const {
   Expense,
   connectToDatabase,
+  deleteMemoryExpense,
+  getMemoryExpense,
+  hasCloudMongoUri,
   methodNotAllowed,
   normalizeExpenseUpdates,
-  sendJson
+  sendJson,
+  updateMemoryExpense
 } = require("../_utils");
 
 module.exports = async function handler(req, res) {
   try {
-    await connectToDatabase();
     const { id } = req.query;
+    const useMemory = !hasCloudMongoUri();
+
+    if (!useMemory) {
+      await connectToDatabase();
+    }
 
     if (req.method === "GET") {
-      const expense = await Expense.findById(id);
+      const expense = useMemory ? getMemoryExpense(id) : await Expense.findById(id);
 
       if (!expense) {
         return sendJson(res, 404, { message: "Expense not found" });
@@ -22,10 +30,13 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "PUT") {
-      const expense = await Expense.findByIdAndUpdate(id, normalizeExpenseUpdates(req.body), {
-        new: true,
-        runValidators: true
-      });
+      const updates = normalizeExpenseUpdates(req.body);
+      const expense = useMemory
+        ? updateMemoryExpense(id, updates)
+        : await Expense.findByIdAndUpdate(id, updates, {
+            new: true,
+            runValidators: true
+          });
 
       if (!expense) {
         return sendJson(res, 404, { message: "Expense not found" });
@@ -35,7 +46,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
-      const expense = await Expense.findByIdAndDelete(id);
+      const expense = useMemory ? deleteMemoryExpense(id) : await Expense.findByIdAndDelete(id);
 
       if (!expense) {
         return sendJson(res, 404, { message: "Expense not found" });

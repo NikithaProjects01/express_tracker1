@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const Expense = require("../backend/models/Expense");
 
 let connectionPromise = null;
+const memoryStore = globalThis.__expenseMemoryStore || {
+  expenses: []
+};
+globalThis.__expenseMemoryStore = memoryStore;
 
 function sendJson(res, status, data) {
   res.statusCode = status;
@@ -15,7 +19,7 @@ function methodNotAllowed(res) {
 }
 
 async function connectToDatabase() {
-  if (!process.env.MONGODB_URI) {
+  if (!hasCloudMongoUri()) {
     throw new Error("MONGODB_URI is not configured");
   }
 
@@ -28,6 +32,79 @@ async function connectToDatabase() {
   }
 
   return connectionPromise;
+}
+
+function hasCloudMongoUri() {
+  const uri = process.env.MONGODB_URI || "";
+  return uri.startsWith("mongodb+srv://") || (uri.startsWith("mongodb://") && !uri.includes("127.0.0.1") && !uri.includes("localhost"));
+}
+
+function createMemoryExpense(data) {
+  const now = new Date().toISOString();
+  const expense = {
+    _id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    ...data,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  memoryStore.expenses.unshift(expense);
+  return expense;
+}
+
+function getMemoryExpenses(filter = {}) {
+  let expenses = [...memoryStore.expenses];
+
+  if (filter.$or?.length) {
+    const regex = filter.$or[0].merchantName.$regex;
+    const matcher = new RegExp(regex, "i");
+    expenses = expenses.filter((expense) => (
+      matcher.test(expense.merchantName || "") ||
+      matcher.test(expense.extractedText || "") ||
+      matcher.test(expense.imageContextSummary || "")
+    ));
+  }
+
+  if (filter.category?.$regex) {
+    const matcher = new RegExp(filter.category.$regex, "i");
+    expenses = expenses.filter((expense) => matcher.test(expense.category || ""));
+  }
+
+  if (filter.expenseDate?.$gte) {
+    expenses = expenses.filter((expense) => (expense.expenseDate || "") >= filter.expenseDate.$gte);
+  }
+
+  if (filter.expenseDate?.$lte) {
+    expenses = expenses.filter((expense) => (expense.expenseDate || "") <= filter.expenseDate.$lte);
+  }
+
+  return expenses;
+}
+
+function getMemoryExpense(id) {
+  return memoryStore.expenses.find((expense) => expense._id === id);
+}
+
+function updateMemoryExpense(id, updates) {
+  const expense = getMemoryExpense(id);
+
+  if (!expense) {
+    return null;
+  }
+
+  Object.assign(expense, updates, { updatedAt: new Date().toISOString() });
+  return expense;
+}
+
+function deleteMemoryExpense(id) {
+  const index = memoryStore.expenses.findIndex((expense) => expense._id === id);
+
+  if (index === -1) {
+    return null;
+  }
+
+  const [expense] = memoryStore.expenses.splice(index, 1);
+  return expense;
 }
 
 function toNumber(value) {
@@ -227,8 +304,14 @@ module.exports = {
   Expense,
   buildExpenseFilter,
   connectToDatabase,
+  createMemoryExpense,
+  deleteMemoryExpense,
   extractExpenseWithMistral,
+  getMemoryExpense,
+  getMemoryExpenses,
+  hasCloudMongoUri,
   methodNotAllowed,
   normalizeExpenseUpdates,
-  sendJson
+  sendJson,
+  updateMemoryExpense
 };
