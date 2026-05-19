@@ -236,7 +236,13 @@ async function extractExpenseWithMistral(file) {
     throw new Error("MISTRAL_API_KEY is not configured");
   }
 
-  const buffer = await fs.readFile(file.filepath);
+  let buffer;
+  try {
+    buffer = await fs.readFile(file.filepath);
+  } catch (readError) {
+    throw new Error(`Failed to read uploaded file: ${readError.message}`);
+  }
+
   const mimeType = file.mimetype || "image/png";
   const imageUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
 
@@ -297,7 +303,11 @@ Rules:
   }
 
   const content = responseData.choices?.[0]?.message?.content || "{}";
-  return normalizeExpenseData(JSON.parse(cleanJsonText(content)));
+  try {
+    return normalizeExpenseData(JSON.parse(cleanJsonText(content)));
+  } catch (parseError) {
+    throw new Error(`Failed to parse Mistral response: ${parseError.message}`);
+  }
 }
 
 module.exports = {

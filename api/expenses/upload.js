@@ -56,6 +56,10 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 400, { message: "Only JPG, JPEG, PNG, and WEBP image files are allowed" });
     }
 
+    if (!image.filepath) {
+      return sendJson(res, 400, { message: "File upload failed: no file path" });
+    }
+
     const expenseData = await extractExpenseWithMistral(image);
     const expensePayload = {
       imageName: image.originalFilename || "uploaded-image",
@@ -73,6 +77,7 @@ module.exports = async function handler(req, res) {
     const expenseData = expense.toObject ? expense.toObject() : expense;
     return sendJson(res, 201, expenseData);
   } catch (error) {
+    console.error("Upload error:", error);
     return sendJson(res, 500, { message: "Failed to process expense image", error: error.message });
   }
 };
