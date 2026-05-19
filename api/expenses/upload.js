@@ -60,7 +60,27 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 400, { message: "File upload failed: no file path" });
     }
 
-    const expenseData = await extractExpenseWithMistral(image);
+    let expenseData;
+    try {
+      expenseData = await extractExpenseWithMistral(image);
+    } catch (extractError) {
+      console.warn("Mistral extraction failed, using fallback:", extractError.message);
+      expenseData = {
+        extractedText: "Image uploaded but AI extraction failed. Please fill in details manually.",
+        imageContextSummary: "",
+        merchantName: "",
+        expenseDate: "",
+        items: [],
+        subtotal: 0,
+        tax: 0,
+        totalAmount: 0,
+        currency: "",
+        paymentMethod: "",
+        category: "",
+        notes: extractError.message
+      };
+    }
+
     const expensePayload = {
       imageName: image.originalFilename || "uploaded-image",
       imageMimeType: image.mimetype,
