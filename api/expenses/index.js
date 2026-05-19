@@ -22,7 +22,8 @@ module.exports = async function handler(req, res) {
 
     await connectToDatabase();
     const expenses = await Expense.find(filter).sort({ createdAt: -1 });
-    return sendJson(res, 200, expenses);
+    const plainExpenses = expenses.map((expense) => expense.toObject());
+    return sendJson(res, 200, plainExpenses);
   } catch (error) {
     return sendJson(res, 500, { message: "Failed to fetch expenses", error: error.message });
   }

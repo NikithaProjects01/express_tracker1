@@ -26,7 +26,8 @@ module.exports = async function handler(req, res) {
         return sendJson(res, 404, { message: "Expense not found" });
       }
 
-      return sendJson(res, 200, expense);
+      const expenseData = expense.toObject ? expense.toObject() : expense;
+      return sendJson(res, 200, expenseData);
     }
 
     if (req.method === "PUT") {
@@ -42,7 +43,8 @@ module.exports = async function handler(req, res) {
         return sendJson(res, 404, { message: "Expense not found" });
       }
 
-      return sendJson(res, 200, expense);
+      const expenseData = expense.toObject ? expense.toObject() : expense;
+      return sendJson(res, 200, expenseData);
     }
 
     if (req.method === "DELETE") {

@@ -70,8 +70,8 @@ module.exports = async function handler(req, res) {
 
     await connectToDatabase();
     const expense = await Expense.create(expensePayload);
-
-    return sendJson(res, 201, expense);
+    const expenseData = expense.toObject ? expense.toObject() : expense;
+    return sendJson(res, 201, expenseData);
   } catch (error) {
     return sendJson(res, 500, { message: "Failed to process expense image", error: error.message });
   }

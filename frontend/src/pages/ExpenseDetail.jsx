@@ -75,7 +75,7 @@ function ExpenseDetail() {
         </dl>
 
         <h2>Items</h2>
-        {expense.items.length === 0 ? (
+        {!expense.items || expense.items.length === 0 ? (
           <p className="muted">No item rows were detected.</p>
         ) : (
           <table>
@@ -106,4 +106,3 @@ function ExpenseDetail() {
 }
 
 export default ExpenseDetail;
-
