@@ -52,9 +52,18 @@ function UploadExpense() {
       setImage(null);
       setMessage(response.data.warning || "Expense created successfully");
     } catch (error) {
-      const apiMessage = error.response?.data?.message;
-      const apiError = error.response?.data?.error;
-      setMessage(apiError ? `${apiMessage}: ${apiError}` : apiMessage || "Upload failed");
+      const apiMessage = error.response?.data?.message || "Upload failed";
+      let apiError = error.response?.data?.error;
+      
+      let errorText = apiMessage;
+      if (apiError) {
+        if (typeof apiError === "object") {
+          apiError = JSON.stringify(apiError);
+        }
+        errorText = `${apiMessage}: ${apiError}`;
+      }
+      
+      setMessage(errorText);
     } finally {
       setLoading(false);
     }
