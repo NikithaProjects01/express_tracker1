@@ -49,21 +49,26 @@ function UploadExpense() {
       });
 
       setCreatedExpense(response.data);
+      if (response.data?._id) {
+        sessionStorage.setItem(`expense:${response.data._id}`, JSON.stringify(response.data));
+      }
       setImage(null);
       setMessage(response.data.warning || "Expense created successfully");
     } catch (error) {
-      const apiMessage = error.response?.data?.message || "Upload failed";
-      let apiError = error.response?.data?.error;
-      
-      let errorText = apiMessage;
+      const data = error.response?.data;
+      const apiMessage = data?.message || "";
+      const apiError = data?.error;
+      let errorText = "";
+
       if (apiError) {
-        if (typeof apiError === "object") {
-          apiError = JSON.stringify(apiError);
-        }
-        errorText = `${apiMessage}: ${apiError}`;
+        errorText = typeof apiError === "string" ? apiError : JSON.stringify(apiError);
       }
-      
-      setMessage(errorText);
+
+      if (apiMessage && errorText) {
+        setMessage(`${apiMessage}: ${errorText}`);
+      } else {
+        setMessage(apiMessage || errorText || "Upload failed");
+      }
     } finally {
       setLoading(false);
     }

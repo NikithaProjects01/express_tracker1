@@ -24,6 +24,11 @@ function ExpenseList() {
 
       const response = await API.get("/expenses", { params });
       setExpenses(response.data);
+      response.data.forEach((expense) => {
+        if (expense?._id) {
+          sessionStorage.setItem(`expense:${expense._id}`, JSON.stringify(expense));
+        }
+      });
     } catch (error) {
       setMessage("Could not load expenses");
     } finally {

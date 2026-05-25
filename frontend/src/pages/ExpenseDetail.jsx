@@ -9,11 +9,29 @@ function ExpenseDetail() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    const cachedExpense = sessionStorage.getItem(`expense:${id}`);
+
     API.get(`/expenses/${id}`)
       .then((response) => {
-        setExpense(response.data);
+        if (response.data && typeof response.data === "object" && response.data._id) {
+          sessionStorage.setItem(`expense:${id}`, JSON.stringify(response.data));
+          setExpense(response.data);
+          return;
+        }
+
+        if (cachedExpense) {
+          setExpense(JSON.parse(cachedExpense));
+          return;
+        }
+
+        setMessage("Expense not found");
       })
       .catch(() => {
+        if (cachedExpense) {
+          setExpense(JSON.parse(cachedExpense));
+          return;
+        }
+
         setMessage("Expense not found");
       });
   }, [id]);
