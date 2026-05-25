@@ -182,7 +182,7 @@ Rules:
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": image_to_data_url(image_file)},
+                        {"type": "image_url", "image_url": {"url": image_to_data_url(image_file)}},
                     ],
                 }
             ],
