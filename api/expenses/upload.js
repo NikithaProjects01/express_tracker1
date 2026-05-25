@@ -94,8 +94,8 @@ module.exports = async function handler(req, res) {
 
     await connectToDatabase();
     const expense = await Expense.create(expensePayload);
-    const expenseData = expense.toObject ? expense.toObject() : expense;
-    return sendJson(res, 201, expenseData);
+    const savedExpense = expense.toObject ? expense.toObject() : expense;
+    return sendJson(res, 201, savedExpense);
   } catch (error) {
     console.error("Upload error:", error);
     return sendJson(res, 500, { message: "Failed to process expense image", error: error.message });
