@@ -35,13 +35,27 @@ function ExpenseDetail() {
     return <main className="page">Loading expense...</main>;
   }
 
+  const hasExtractedData = Boolean(
+    expense.extractedText ||
+      expense.merchantName ||
+      expense.expenseDate ||
+      expense.totalAmount ||
+      expense.category ||
+      (expense.items && expense.items.length > 0)
+  );
+
   return (
     <main className="page">
       <section className="panel">
         <div className="page-heading">
           <div>
-            <h1>{expense.merchantName || "Expense Detail"}</h1>
-            <p className="muted">{expense.imageContextSummary}</p>
+            <h1>{expense.merchantName || expense.imageName || "Expense Detail"}</h1>
+            <p className="muted">
+              {expense.imageContextSummary ||
+                (!hasExtractedData
+                  ? "No expense data was extracted for this image. Delete it and upload a clearer receipt image."
+                  : "")}
+            </p>
           </div>
           <div className="actions">
             <Link className="button-link" to={`/expenses/${id}/edit`}>
@@ -74,6 +88,13 @@ function ExpenseDetail() {
           </div>
         </dl>
 
+        {!hasExtractedData && (
+          <p className="message">
+            Extraction did not return usable data for this image. Try uploading a clearer receipt, bill, or
+            payment screenshot.
+          </p>
+        )}
+
         <h2>Items</h2>
         {!expense.items || expense.items.length === 0 ? (
           <p className="muted">No item rows were detected.</p>
@@ -100,6 +121,13 @@ function ExpenseDetail() {
 
         <h2>Extracted Text</h2>
         <pre>{expense.extractedText || "No readable text found."}</pre>
+
+        {expense.notes && (
+          <>
+            <h2>Notes</h2>
+            <pre>{expense.notes}</pre>
+          </>
+        )}
       </section>
     </main>
   );
